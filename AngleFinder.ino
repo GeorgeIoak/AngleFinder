@@ -52,10 +52,6 @@
 #include <Wire.h>
 
 #include "SSD1306Wire.h"
-
-#include <Adafruit_GFX.h>
-#include <Adafruit_SSD1306.h>
-
 #include "ADXL355.h"
 
 #define __PLIOT__  1
@@ -121,7 +117,6 @@ float adxl355Scale;
 // Initialize the OLED display using Wire library
 SSD1306Wire  display(0x3c, D3, D4);
 
-//Adafruit_SSD1306 display(OLED_DC, OLED_RESET, OLED_CS);
 /**************************** Function Definitions ****************************/
 
 /**
@@ -344,12 +339,9 @@ void setup()
    
    /* Initialize UART */
    Serial.begin(115200);
-   //display.begin(SSD1306_SWITCHCAPVCC);
    delay(500);
    
-   //display.clearDisplay();
-
-     // Initialising the UI will init the display too.
+  // Initialising the UI will init the display too.
   display.init();
 
   display.flipScreenVertically();
@@ -359,16 +351,7 @@ void setup()
 #if(!__PLIOT__)
    Serial.println("***** ADXL355 Simple Test *****");
 #endif
-  //display.setTextSize(1);
-  //display.setTextColor(WHITE);
-  //display.setCursor(0,0);
-  //display.println("* www.ino-on.co.kr *");
-  //display.println("** ADXL355 **");
-  //display.println("Initializing...");
-  //display.println("Waiting 3 seconds.....");
-  //display.display();
-  delay(1000);
-   
+
    /* Initialize accelerometer */
    ADXL355_Init();
    
@@ -408,7 +391,7 @@ void setup()
      Serial.println(ui32test3, HEX);
      Serial.println("");
 #endif
-     delay(3000);
+     delay(1000);
   }while( ui32test == 0x00 );
 
   ADXL355_Data_Init();
@@ -416,11 +399,13 @@ void setup()
 }
 
 char loop_count;
+char sensorX[10], sensorY[10], sensorZ[10];
 
 void loop() 
 {
-    // clear the display
   display.clear();
+  display.setFont(ArialMT_Plain_16);
+  display.setTextAlignment(TEXT_ALIGN_LEFT);
   
   if( digitalRead(DATARDYACC_PIN) == HIGH )
   {
@@ -428,84 +413,75 @@ void loop()
 
     f32temp = ((((float)ui32SensorT - ADXL355_TEMP_BIAS)) / ADXL355_TEMP_SLOPE) + 25.0;
 
-#if(__PLIOT__)
-    Serial.print((float)(i32SensorX-i32SensorX_init) / adxl355Scale, 3);
-    float Xdata = ((float)(i32SensorX-i32SensorX_init) / adxl355Scale);
-    float Ydata = ((float)(i32SensorY-i32SensorY_init) / adxl355Scale);
-    float Zdata = ((float)(i32SensorZ-i32SensorZ_init) / adxl355Scale);
-    Serial.print(",");
-    Serial.print((float)(i32SensorY-i32SensorY_init) / adxl355Scale, 3);
-    Serial.print(",");
-    Serial.print((float)(i32SensorZ-i32SensorZ_init) / adxl355Scale, 3);        
-    Serial.println("");
-    //Serial.print("X: ");
-    //Serial.print(Xdata);
-    //Serial.println("");
-    display.setFont(ArialMT_Plain_16);
-    display.setTextAlignment(TEXT_ALIGN_LEFT);
-    char sensorX[10], sensorY[10], sensorZ[10];
- 
-    dtostrf(Xdata, 6, 3, sensorX);
-    dtostrf(Ydata, 6, 3, sensorY);
-    dtostrf(Zdata, 6, 3, sensorZ);
-    String sXdata = ("X: ") + String(Xdata, 3);
-    String sYdata = ("Y: ") + String(Ydata, 3);
-    String sZdata = ("Z: ") + String(Zdata, 3);
-    display.drawString(10, 15, sXdata);
-    display.drawString(10, 30, sYdata);
-    display.drawString(10, 45, sZdata);
-    display.display();
-#else
-#if (1)   
-    Serial.print("X acceleration data [G]: ");        /* Print the X-axis data */
-    Serial.print((float)(i32SensorX-i32SensorX_init) / adxl355Scale, 3);
-    Serial.println("[mg]");
-    
-    Serial.print("Y acceleration data [G]: ");        /* Print the Y-axis data */
-    Serial.print((float)(i32SensorY-i32SensorY_init) / adxl355Scale, 3);
-    Serial.println("[mg]");
-    
-    Serial.print("Z acceleration data [G]: ");        /* Print the Z-axis data */
-    Serial.print((float)(i32SensorZ-i32SensorZ_init) / adxl355Scale, 3);        
-    Serial.println("[mg]");
-#else
+  #if(__PLIOT__)
+      float Xdata = ((float)(i32SensorX-i32SensorX_init) / adxl355Scale);
+      float Ydata = ((float)(i32SensorY-i32SensorY_init) / adxl355Scale);
+      float Zdata = ((float)(i32SensorZ-i32SensorZ_init) / adxl355Scale);
 
-    Serial.print("X acceleration data [G]: ");        /* Print the X-axis data */
-    Serial.print((float)i32SensorX / adxl355Scale, 3);
-    Serial.println("[mg]");
-    
-    Serial.print("Y acceleration data [G]: ");        /* Print the Y-axis data */
-    Serial.print((float)i32SensorY / adxl355Scale, 3);
-    Serial.println("[mg]");
-    
-    Serial.print("Z acceleration data [G]: ");        /* Print the Z-axis data */
-    Serial.print((float)i32SensorZ / adxl355Scale, 3);        
-    Serial.println("[mg]");
-#endif    
-    Serial.print("The temperature data is: " );      /* Print the Temperature data */
-    Serial.print(f32temp, 2);        
-    Serial.println("[C]");
-    Serial.println();
-#endif
-    if( loop_count%0x1F == 0)
-    {
-/*      display.clearDisplay();
-      display.setCursor(0,0);
-      display.println("* www.ino-on.co.kr *");
-      display.print("X: ");
-      display.print((float)(i32SensorX-i32SensorX_init) / adxl355Scale, 3);
-      display.println("mg");
-      display.print("Y: ");
-      display.print((float)(i32SensorY-i32SensorY_init) / adxl355Scale, 3);
-      display.println("mg");
-      display.print("Z: ");
-      display.print((float)(i32SensorZ-i32SensorZ_init) / adxl355Scale, 3);    
-      display.println("mg");
-      display.display(); */
-    }
-    loop_count++;
-  }  
-  delay(2000);  
-}
+      dtostrf(Xdata, 6, 3, sensorX);
+      dtostrf(Ydata, 6, 3, sensorY);
+      dtostrf(Zdata, 6, 3, sensorZ);
+      
+      String sXdata = ("X: ") + String(Xdata, 3) + String("mg");
+      String sYdata = ("Y: ") + String(Ydata, 3) + String("mg");
+      String sZdata = ("Z: ") + String(Zdata, 3) + String("mg");      
+  
+      Serial.print(Xdata, 3);
+      Serial.print(", ");
+      Serial.print(Ydata, 3);
+      Serial.print(", ");
+      Serial.print(Zdata, 3);        
+      Serial.println("");
+      
+      Serial.print("The temperature data is: " );      /* Print the Temperature data */
+      Serial.print(f32temp, 2);        
+      Serial.println("[C]");
+      Serial.println();
+
+  
+  #else
+  #if (1)   
+      Serial.print("X acceleration data [G]: ");        /* Print the X-axis data */
+      Serial.print((float)(i32SensorX-i32SensorX_init) / adxl355Scale, 3);
+      Serial.println("[mg]");
+      
+      Serial.print("Y acceleration data [G]: ");        /* Print the Y-axis data */
+      Serial.print((float)(i32SensorY-i32SensorY_init) / adxl355Scale, 3);
+      Serial.println("[mg]");
+      
+      Serial.print("Z acceleration data [G]: ");        /* Print the Z-axis data */
+      Serial.print((float)(i32SensorZ-i32SensorZ_init) / adxl355Scale, 3);        
+      Serial.println("[mg]");
+  #else
+  
+      Serial.print("X acceleration data [G]: ");        /* Print the X-axis data */
+      Serial.print((float)i32SensorX / adxl355Scale, 3);
+      Serial.println("[mg]");
+      
+      Serial.print("Y acceleration data [G]: ");        /* Print the Y-axis data */
+      Serial.print((float)i32SensorY / adxl355Scale, 3);
+      Serial.println("[mg]");
+      
+      Serial.print("Z acceleration data [G]: ");        /* Print the Z-axis data */
+      Serial.print((float)i32SensorZ / adxl355Scale, 3);        
+      Serial.println("[mg]");
+  #endif    
+      Serial.print("The temperature data is: " );      /* Print the Temperature data */
+      Serial.print(f32temp, 2);        
+      Serial.println("[C]");
+      Serial.println();
+  #endif
+      if( loop_count%0x1F == 0)
+      {
+        display.clear();
+        display.drawString(10, 15, sXdata);
+        display.drawString(10, 30, sYdata);
+        display.drawString(10, 45, sZdata);
+        display.display();
+      }
+      loop_count++;
+    }  
+    delay(1000);  
+  }
 
 /* End Of File *///
